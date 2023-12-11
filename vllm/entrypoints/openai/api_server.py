@@ -18,6 +18,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, Response
 
+from lmformatenforcer.integrations.vllm import build_vllm_logits_processor
+from lmformatenforcer import JsonSchemaParser
+
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.metrics import add_global_metrics_labels
@@ -269,6 +272,14 @@ async def create_chat_completion(request: ChatCompletionRequest,
         )
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
+    
+    if request.jsonparser != None:
+        jsonparser = json.loads(request.jsonparser)
+        logits_processor = build_vllm_logits_processor(tokenizer, JsonSchemaParser(jsonparser))
+        sampling_params.logits_processors = [logits_processor]
+        print("\n\n json = true \n\n")
+    else:
+        print("\n\n json = false \n\n")
 
     result_generator = engine.generate(prompt, sampling_params, request_id,
                                        token_ids)
@@ -516,6 +527,14 @@ async def create_completion(request: CompletionRequest, raw_request: Request):
         )
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
+    
+    if request.jsonparser != None:
+        jsonparser = json.loads(request.jsonparser)
+        logits_processor = build_vllm_logits_processor(tokenizer, JsonSchemaParser(jsonparser))
+        sampling_params.logits_processors = [logits_processor]
+        print("\n\n json = true \n\n")
+    else:
+        print("\n\n json = false \n\n")
 
     if use_token_ids:
         result_generator = engine.generate(None,
