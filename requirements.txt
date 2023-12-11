@@ -14,3 +14,5 @@ uvicorn[standard]
 pydantic == 1.10.13  # Required for OpenAI server.
 aioprometheus[starlette]
 lm-format-enforcer >= 0.7.2
+megablocks
+stanford-stk
